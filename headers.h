@@ -1,53 +1,60 @@
-#define DMH_PATH_MAX 128
-#define DMH_RL_BUFSIZE 1024
-#define DMH_TOK_BUFSIZE 64
-#define DMH_ECHO_MAX 1024
-#define DMH_TOK_DELIM " \t\r\n\a"
+#include <stdio.h>
+#include <stdlib.h>
+#include <signal.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/dir.h>
+#include <pwd.h>
+#include <grp.h>
+#include <time.h>
 
-extern char back_process[1<<20][256];
-extern _Bool get_flag;
-extern int alphasort();
+#define TOKENISE_DELIMITER " \t\r\n\a"
+#define readline_buffersize 4096
 
-// dmh shell main
-void dmh(void);
-char *dmh_read_line(void);
-char **dmh_split_line(char *line);
-int dmh_execute(char** args);
-int dmh_launch(char **args);
+char background_process[100][256], present_root[256], username[256],
+hostname[256], cwd[256], history[20][4096];
 
-// builtin declarations 
-int dmh_exit(char **args);
-int dmh_cd(char **args);
-int dmh_pwd(char **args);
-int dmh_echo(char **args);
-int dmh_ls(char **args);
-int dmh_pinfo(char **args);
-int dmh_remindme(char **args);
-int dmh_clock(char **args);
+// Core Functions
+void wait_handler();
+char *read_line();
+char **split_line(char *line);
+int execute(char** args);
+int launch(char **args);
 
-// list of commands
+// Support functions
+int alphasort();
+void print_ls(char *dname);
+char *permissions(char *filename);
+void manage_history(char *line);
+
+// Custom commands
+int cd(char **args);
+int pwd(char **args);
+int my_exit(char **args);
+int echo(char **args);
+int pinfo(char **args);
+int ls(char **args);
+int history_(char **args);
+
 static const char *builtin_str[] = {
-	"exit",
 	"cd",
 	"pwd",
+	"exit",
 	"echo",
-	"ls",
 	"pinfo",
-	"remindme",
-	"clock"
+	"ls",
+	"history",
 };
 
 static const int (*builtin_func[]) (char **) = {
-	&dmh_exit,
-	&dmh_cd,
-	&dmh_pwd,
-	&dmh_echo,
-	&dmh_ls,
-	&dmh_pinfo,
-	&dmh_remindme,
-	&dmh_clock
+	&cd,
+	&pwd,
+	&my_exit,
+	&echo,
+	&pinfo,
+	&ls,
+	&history_,
 };
-
-// extra functions
-void dmh_wait_handler();
-int dmh_num_builtins();
