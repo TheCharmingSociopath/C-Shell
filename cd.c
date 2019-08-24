@@ -3,6 +3,10 @@
 int cd(char **args)
 {
     char *arg = (args[1] == NULL) ? present_root : args[1];
+    if (strcmp(arg, "~") == 0)
+    {
+        strcpy(arg, present_root);
+    }
     if (args[2] != NULL)
         fprintf(stderr, "Too many arguments to \"cd.\" Expected 1 argument.\n");
     else

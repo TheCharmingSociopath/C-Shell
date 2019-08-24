@@ -5,23 +5,22 @@ int main()
     char *line, **args;
     int status = 1, i = 0, cwd_size, present_root_size;
 
-    for (i = 0; i < 100; ++i)
+    for (i = 0; i < max_pid; ++i)
         background_process[i][0] = '\0';
 
     if (getcwd(present_root, sizeof(present_root)) != NULL)
         present_root_size = strlen(present_root);
     else
         perror("getcwd() error");
-
-    if (getlogin_r(username, sizeof(username)))
-        perror("getlogin_r() error");
-
-    if (gethostname(hostname, sizeof(hostname)))
-        perror("gethostname() error");
-
-    while(status)
+    while (status)
     {
         signal(SIGCHLD, wait_handler);
+
+        if (getlogin_r(username, sizeof(username)))
+            perror("getlogin_r() error");
+
+        if (gethostname(hostname, sizeof(hostname)))
+            perror("gethostname() error");
 
         if (getcwd(cwd, sizeof(cwd)) != NULL)
             cwd_size = strlen(cwd);

@@ -13,8 +13,9 @@
 
 #define TOKENISE_DELIMITER " \t\r\n\a"
 #define readline_buffersize 4096
+#define max_pid 1<<20
 
-char background_process[100][256], present_root[256], username[256],
+char background_process[max_pid][1024], present_root[256], username[256],
 hostname[256], cwd[256], history[20][4096];
 
 // Core Functions
@@ -38,6 +39,7 @@ int echo(char **args);
 int pinfo(char **args);
 int ls(char **args);
 int history_(char **args);
+int nightswatch(char **args);
 
 static const char *builtin_str[] = {
 	"cd",
@@ -47,6 +49,7 @@ static const char *builtin_str[] = {
 	"pinfo",
 	"ls",
 	"history",
+	"nightswatch",
 };
 
 static const int (*builtin_func[]) (char **) = {
@@ -57,4 +60,5 @@ static const int (*builtin_func[]) (char **) = {
 	&pinfo,
 	&ls,
 	&history_,
+	&nightswatch,
 };

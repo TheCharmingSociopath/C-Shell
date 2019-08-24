@@ -12,7 +12,7 @@ int ls(char **args)
         {
             if (args[i][1] == '\0')
             {
-                strcpy(directories[dir_count++], '-');
+                strcpy(directories[dir_count++], "-");
                 continue;
             }
             else if (args[i][1] == 'l')
@@ -29,7 +29,10 @@ int ls(char **args)
         }
         else
         {
-            strcpy(directories[dir_count++], args[i]);
+            if (args[i][0] == '~' && args[i][1] == '\0')
+                strcpy(directories[dir_count++], present_root);
+            else
+                strcpy(directories[dir_count++], args[i]);
         }
     }
     if (dir_count == 0)
@@ -76,13 +79,15 @@ void print_ls(char *dname)
             stat(entries[i]->d_name, &st);
             struct passwd *owner = getpwuid(st.st_uid);
             struct group *group = getgrgid(st.st_gid);
-            char* date = malloc(256);
+            char *date = malloc(256);
             strftime(date, 256, "%b\t%d\t%H:%M", localtime(&st.st_mtime));
             printf("%s\t%ld\t%s\t%s\t%ld\t%s\t%s\n", permissions(entries[i]->d_name), st.st_nlink,
-            owner -> pw_name, group -> gr_name, st.st_size, date, entries[i]->d_name);
+                   owner->pw_name, group->gr_name, st.st_size, date, entries[i]->d_name);
         }
     }
     printf("\n");
+    chdir(cwd);
+    closedir(d);
 }
 
 char *permissions(char *filename)

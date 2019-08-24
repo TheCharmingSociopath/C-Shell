@@ -4,11 +4,11 @@ void wait_handler()
 {
     int status;
     int i;
-    for (i = 0; i < 100; ++i)
+    for (i = 0; i < max_pid; ++i)
     {
         if (waitpid(i, &status, WNOHANG) && background_process[i][0] != '\0')
         {
-            printf("\n%s with pid: %d exited normally\n", background_process[i], i);
+            printf("\n%s with pid %d closed\n", background_process[i], i);
             printf("Press Enter to continue\n");
             background_process[i][0] = '\0';
         }
@@ -101,7 +101,10 @@ int launch(char **args)
     else if (pid > 0) // PARENT PROCESS
     {
         if (background_flag)
+        {
             strcpy(background_process[pid], args[0]);
+            // printf("bt\n");
+        }
         else
         {
             do
@@ -126,5 +129,5 @@ void manage_history(char *line)
     while (i < 20 && history[i][0] != '\0')
         ++i;
     strcpy(history[i], line);
-    return 1;
+    return;
 }
