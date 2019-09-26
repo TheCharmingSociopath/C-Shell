@@ -22,7 +22,9 @@ hostname[256], cwd[256], history[20][4096];
 void wait_handler();
 char *read_line();
 char **split_line(char *line);
-int execute(char** args);
+char **split_pipe(char *line);
+int execute(char **args);
+int execute_new(char **args);
 int launch(char **args);
 
 // Support functions

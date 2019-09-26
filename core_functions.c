@@ -61,6 +61,65 @@ char **split_line(char *line)
     return tokens;
 }
 
+char **split_pipe(char *line)
+{
+    int buffersize = 4096, position = 0;
+    char **tokens = malloc(buffersize * sizeof(char *)), *token;
+
+    if (tokens == NULL)
+    {
+        fprintf(stderr, "Memory Error: Buffer can't be allocated\n");
+        exit(EXIT_FAILURE);
+    }
+
+    token = strtok(line, "|");
+    while (token != NULL)
+    {
+        tokens[position++] = token;
+        token = strtok(NULL, "|");
+    }
+    tokens[position] = NULL;
+    return tokens;
+}
+int execute_new(char **args)
+{
+    if (args[0] == NULL)
+        return 1;
+    int j = 0, fd[2], fdc = 0;
+    char **new_args;
+    if (args[1] == NULL)
+    {
+        new_args = split_line(args[0]);
+        return execute(new_args);
+    }
+    while (args[j] != NULL)
+    {
+        pipe(fd);
+
+        if (fork() == 0)
+        {
+            dup2(fdc, 0);
+            if (args[j + 1] != NULL)
+            {
+                dup2(fd[1], 1);
+            }
+            close(fd[0]);
+            new_args = split_line(args[j]);
+            execute(new_args);
+            free(new_args);
+            exit(0);
+        }
+        else
+        {
+            wait(NULL);
+            j++;
+            fdc = dup(fd[0]);
+            close(fd[1]);
+        }
+    }
+    return 1;
+}
+
 int execute(char **args)
 {
     if (args[0] == NULL)
@@ -69,7 +128,6 @@ int execute(char **args)
     for (int i = 0; i < num_builtins; ++i)
         if (strcmp(args[0], builtin_str[i]) == 0)
             return (*builtin_func[i])(args);
-
     return launch(args);
 }
 

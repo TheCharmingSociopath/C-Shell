@@ -40,8 +40,8 @@ int main()
 
         line = read_line();
         manage_history(line);
-        args = split_line(line);
-        status = execute(args); // 1 == Success. Prompt again
+        args = split_pipe(line);
+        status = execute_new(args); // 1 == Success. Prompt again
         free(line);
         free(args);
     }
