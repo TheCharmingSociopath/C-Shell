@@ -10,6 +10,7 @@
 #include <pwd.h>
 #include <grp.h>
 #include <time.h>
+#include <fcntl.h>
 
 #define TOKENISE_DELIMITER " \t\r\n\a"
 #define readline_buffersize 4096
@@ -22,6 +23,7 @@ hostname[256], cwd[256], history[20][4096];
 void wait_handler();
 char *read_line();
 char **split_line(char *line);
+char **handle_redirection(char **args);
 char **split_pipe(char *line);
 int execute(char **args);
 int execute_new(char **args);
@@ -42,6 +44,8 @@ int pinfo(char **args);
 int ls(char **args);
 int history_(char **args);
 int nightswatch(char **args);
+int setenv_(char **args);
+int unsetenv_(char **args);
 
 static const char *builtin_str[] = {
 	"cd",
@@ -52,6 +56,8 @@ static const char *builtin_str[] = {
 	"ls",
 	"history",
 	"nightswatch",
+	"setenv",
+	"unsetenv",
 };
 
 static const int (*builtin_func[]) (char **) = {
@@ -63,4 +69,6 @@ static const int (*builtin_func[]) (char **) = {
 	&ls,
 	&history_,
 	&nightswatch,
+	&setenv_,
+	&unsetenv_,
 };

@@ -1,4 +1,6 @@
 #include "headers.h"
+int red_flag = 0, red_flag_append = 0, red_flag_inp = 0;
+char *red_file, *red_file_append, *red_file_inp;
 
 void wait_handler()
 {
@@ -61,6 +63,35 @@ char **split_line(char *line)
     return tokens;
 }
 
+char **handle_redirection(char **args)
+{
+    int position = 0, buffersize = 2048;
+    char **new_args = malloc(buffersize * sizeof(char *));
+    for (int i = 0; args[i] != NULL; ++i)
+    {
+        if (strcmp(args[i], ">") == 0)
+        {
+            red_file = args[++i];
+            red_flag = 1;
+            continue;
+        }
+        if (strcmp(args[i], "<") == 0)
+        {
+            red_file_inp = args[++i];
+            red_flag_inp = 1;
+            continue;
+        }
+        if (strcmp(args[i], ">>") == 0)
+        {
+            red_file_append = args[++i];
+            red_flag_append = 1;
+            continue;
+        }
+        new_args[position++] = args[i];
+    }
+    new_args[position] = NULL;
+    return new_args;
+}
 char **split_pipe(char *line)
 {
     int buffersize = 4096, position = 0;
@@ -90,7 +121,8 @@ int execute_new(char **args)
     if (args[1] == NULL)
     {
         new_args = split_line(args[0]);
-        return execute(new_args);
+        int ret = execute(new_args);
+        return ret;
     }
     while (args[j] != NULL)
     {
@@ -122,13 +154,60 @@ int execute_new(char **args)
 
 int execute(char **args)
 {
-    if (args[0] == NULL)
-        return 1;
-    int num_builtins = sizeof(builtin_str) / sizeof(char *);
+    args = handle_redirection(args);
+    int ret, num_builtins = sizeof(builtin_str) / sizeof(char *), fd_stdin = dup(0), fd_stdout = dup(1);
+    if (red_flag)
+    {
+        int fd = open(red_file, O_WRONLY | O_TRUNC | O_CREAT, 0644);
+        if (fd < 0)
+            perror("Error opening the file");
+        if (dup2(fd, 1) < 0)
+            perror("Error: failed at dup2");
+        close(fd);
+    }
+    else if (red_flag_append)
+    {
+        int fd = open(red_file_append, O_WRONLY | O_APPEND | O_CREAT, 0644);
+        if (fd < 0)
+            perror("Error opening the file");
+        if (dup2(fd, 1) < 0)
+            perror("Error: failed at dup2");
+        close(fd);
+    }
+    else if (red_flag_inp)
+    {
+        int fd = open(red_file_inp, O_RDONLY, 0);
+        if (fd < 0)
+            perror("Error opening the file");
+        if (dup2(fd, 0) < 0)
+            perror("Error: failed at dup2");
+        close(fd);
+    }
     for (int i = 0; i < num_builtins; ++i)
+    {
         if (strcmp(args[0], builtin_str[i]) == 0)
-            return (*builtin_func[i])(args);
-    return launch(args);
+        {
+            ret = (*builtin_func[i])(args);
+            dup2(fd_stdout, 1);
+            dup2(fd_stdin, 0);
+            close(fd_stdout);
+            close(fd_stdin);
+            red_flag = 0;
+            red_flag_append = 0;
+            red_flag_inp = 0;
+            return ret;
+        }
+    }
+
+    ret = launch(args);
+    dup2(fd_stdout, 1);
+    dup2(fd_stdin, 0);
+    close(fd_stdout);
+    close(fd_stdin);
+    red_flag = 0;
+    red_flag_append = 0;
+    red_flag_inp = 0;
+    return ret;
 }
 
 int launch(char **args)
