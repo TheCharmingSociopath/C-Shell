@@ -49,11 +49,13 @@ int setenv_(char **args);
 int unsetenv_(char **args);
 int jobs(char **args);
 int kjob(char **args);
+int fg(char **args);
+int bg(char **args);
 
 static const char *builtin_str[] = {
 	"cd",
 	"pwd",
-	"exit",
+	"quit",
 	"echo",
 	"pinfo",
 	"ls",
@@ -63,6 +65,8 @@ static const char *builtin_str[] = {
 	"unsetenv",
 	"jobs",
 	"kjob",
+	"fg",
+	"bg",
 };
 
 static const int (*builtin_func[]) (char **) = {
@@ -78,4 +82,6 @@ static const int (*builtin_func[]) (char **) = {
 	&unsetenv_,
 	&jobs,
 	&kjob,
+	&fg,
+	&bg,
 };
