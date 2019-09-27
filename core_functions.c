@@ -1,6 +1,6 @@
 #include "headers.h"
 int red_flag = 0, red_flag_append = 0, red_flag_inp = 0, num_bg = 0,
-    flag_c = 0, flag_z = 0;
+    flag_c = 0, flag_z = 0, num_up = 0;
 char *red_file, *red_file_append, *red_file_inp;
 
 void wait_handler()
@@ -41,7 +41,7 @@ void signal_c(int sig)
 
 char *read_line()
 {
-    int position = 0, c;
+    int position = 0, c, c1, c2;
     char *buffer = malloc(sizeof(char) * readline_buffersize);
 
     if (buffer == NULL)
@@ -55,11 +55,37 @@ char *read_line()
         c = getchar();
         if (c == ';' || c == '\n' || c == EOF)
         {
-            buffer[position] = '\0';
-            return buffer;
+            if (num_up == 0)
+            {
+                buffer[position] = '\0';
+                return buffer;
+            }
+            else
+            {
+                int idx;
+                for (idx = 0; history[idx][0] != '\0'; ++idx);
+                idx -= num_up;
+                return history[idx];
+            }
         }
         else
-            buffer[position++] = c;
+        {
+            if (c == 27)
+            {
+                c1 = getchar();
+                c2 = getchar();
+                if (c1 == 91 && c2 == 65)
+                    ++num_up;
+                else
+                {
+                    buffer[position++] = c;
+                    buffer[position++] = c1;
+                    buffer[position++] = c2;
+                }
+            }
+            else
+                buffer[position++] = c;
+        }
     }
 }
 
@@ -271,7 +297,8 @@ int launch(char **args)
             flag_c = 0;
             signal(SIGTSTP, signal_z);
             signal(SIGINT, signal_c);
-            while (!flag_z && !flag_c && waitpid(pid, &status, WNOHANG) != pid);
+            while (!flag_z && !flag_c && waitpid(pid, &status, WNOHANG) != pid)
+                ;
             if (flag_c)
             {
                 kill(pid, 9);
