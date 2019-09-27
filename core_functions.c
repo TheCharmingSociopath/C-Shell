@@ -1,6 +1,6 @@
 #include "headers.h"
-int red_flag = 0, red_flag_append = 0, red_flag_inp = 0;
-int num_bg = 0;
+int red_flag = 0, red_flag_append = 0, red_flag_inp = 0, num_bg = 0,
+    flag_c = 0, flag_z = 0;
 char *red_file, *red_file_append, *red_file_inp;
 
 void wait_handler()
@@ -24,6 +24,18 @@ void wait_handler()
             --num_bg;
         }
     }
+    return;
+}
+
+void signal_z(int sig)
+{
+    flag_z = 1;
+    return;
+}
+
+void signal_c(int sig)
+{
+    flag_c = 1;
     return;
 }
 
@@ -248,16 +260,33 @@ int launch(char **args)
     {
         if (background_flag)
         {
+            setpgid(pid, pid);
+            signal(SIGCHLD, SIG_IGN);
             strcpy(background_process[pid], args[0]);
             background_process_pid_order[num_bg++] = pid;
-            // printf("bt\n");
         }
         else
         {
-            do
+            flag_z = 0;
+            flag_c = 0;
+            signal(SIGTSTP, signal_z);
+            signal(SIGINT, signal_c);
+            while (!flag_z && !flag_c && waitpid(pid, &status, WNOHANG) != pid);
+            if (flag_c)
             {
-                wpid = waitpid(pid, &status, WUNTRACED);
-            } while (WIFEXITED(status) == 0 && WIFSIGNALED(status) == 0);
+                kill(pid, 9);
+                wait(NULL);
+            }
+            if (flag_z)
+            {
+                setpgid(pid, pid);
+                kill(pid, SIGSTOP);
+                strcpy(background_process[pid], args[0]);
+                background_process_pid_order[num_bg++] = pid;
+                signal(SIGCHLD, SIG_IGN);
+            }
+            flag_c = 0;
+            flag_z = 0;
         }
     }
     return 1;
@@ -277,4 +306,6 @@ void manage_history(char *line)
         ++i;
     strcpy(history[i], line);
     return;
+    // strcpy(history[num_history++], line);
+    // return;
 }

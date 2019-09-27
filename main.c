@@ -15,6 +15,9 @@ int main()
     while (status)
     {
         signal(SIGCHLD, wait_handler);
+        signal(SIGTSTP, SIG_IGN);
+        signal(SIGQUIT, SIG_IGN);
+        signal(SIGINT, SIG_IGN);
 
         if (getlogin_r(username, sizeof(username)))
             perror("getlogin_r() error");
