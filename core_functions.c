@@ -1,5 +1,6 @@
 #include "headers.h"
 int red_flag = 0, red_flag_append = 0, red_flag_inp = 0;
+int num_bg = 0;
 char *red_file, *red_file_append, *red_file_inp;
 
 void wait_handler()
@@ -13,6 +14,14 @@ void wait_handler()
             printf("\n%s with pid %d closed\n", background_process[i], i);
             printf("Press Enter to continue\n");
             background_process[i][0] = '\0';
+            int temp = 0;
+            for (int j = 0; j < num_bg; ++j)
+            {
+                if (background_process_pid_order[j] == i)
+                    continue;
+                background_process_pid_order[temp++] = background_process_pid_order[j];
+            }
+            --num_bg;
         }
     }
     return;
@@ -240,6 +249,7 @@ int launch(char **args)
         if (background_flag)
         {
             strcpy(background_process[pid], args[0]);
+            background_process_pid_order[num_bg++] = pid;
             // printf("bt\n");
         }
         else

@@ -18,6 +18,7 @@
 
 char background_process[max_pid][1024], present_root[256], username[256],
 hostname[256], cwd[256], history[20][4096];
+int background_process_pid_order[max_pid];
 
 // Core Functions
 void wait_handler();
@@ -46,6 +47,8 @@ int history_(char **args);
 int nightswatch(char **args);
 int setenv_(char **args);
 int unsetenv_(char **args);
+int jobs(char **args);
+int kjob(char **args);
 
 static const char *builtin_str[] = {
 	"cd",
@@ -58,6 +61,8 @@ static const char *builtin_str[] = {
 	"nightswatch",
 	"setenv",
 	"unsetenv",
+	"jobs",
+	"kjob",
 };
 
 static const int (*builtin_func[]) (char **) = {
@@ -71,4 +76,6 @@ static const int (*builtin_func[]) (char **) = {
 	&nightswatch,
 	&setenv_,
 	&unsetenv_,
+	&jobs,
+	&kjob,
 };
