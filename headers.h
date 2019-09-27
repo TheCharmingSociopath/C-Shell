@@ -51,6 +51,7 @@ int jobs(char **args);
 int kjob(char **args);
 int fg(char **args);
 int bg(char **args);
+int overkill(char **args);
 
 static const char *builtin_str[] = {
 	"cd",
@@ -67,6 +68,7 @@ static const char *builtin_str[] = {
 	"kjob",
 	"fg",
 	"bg",
+	"overkill",
 };
 
 static const int (*builtin_func[]) (char **) = {
@@ -84,4 +86,5 @@ static const int (*builtin_func[]) (char **) = {
 	&kjob,
 	&fg,
 	&bg,
+	&overkill,
 };
